@@ -41,9 +41,9 @@ type QueryType = {
 
 type QueryValue = number | string;
 
-type TableItem = Visitor;
+type TableItem = VisitorTable;
 
-type Visitor = {
+type VisitorTable = {
   id: number,
   hotel: string,
   adults: number,
@@ -107,15 +107,27 @@ const App: React.FC = () => {
     setQueryValue(value);
   }
 
+  const handleSuccessResponse = (response: AxiosResponse<TableItem[]>, columns: Column[]) => {
+    setTableItems(response.data);
+    setTableColumns(columns);
+  }
+
+  const handleAllenQueries = async (endpoint: string) => {
+    const response = await executeAllenQuery(endpoint) as AxiosResponse<TableItem[]>;
+    if (response) {
+      handleSuccessResponse(response, visitorColumns);
+    }
+  }
+
+
   const executeQuery = async (e: FormEvent<HTMLButtonElement>) => {
     e.preventDefault();
     const { endpoint } = queryOptions[queryNum];
+    // Allen queries handling
     if (queryNum >= 0 && queryNum <= 13) {
-      const response = await executeAllenQuery(endpoint) as AxiosResponse<TableItem[]>;
-      if (response) {
-        setTableItems(response.data);
-        setTableColumns(visitorColumns);
-      }
+      await handleAllenQueries(endpoint);
+    } else {
+      
     }
   }
 
