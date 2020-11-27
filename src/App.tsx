@@ -66,6 +66,11 @@ const visitorColumns: Column[] = [
     selector: 'id'
   },
   {
+    id: 'name',
+    name: 'Name',
+    selector: 'name'
+  },
+  {
     id: 'hotel',
     name: 'Hotel',
     selector: 'hotel'
@@ -112,28 +117,27 @@ const App: React.FC = () => {
     setTableColumns(columns);
   }
 
-  const handleAllenQueries = async (endpoint: string) => {
-    const response = await executeAllenQuery(endpoint) as AxiosResponse<TableItem[]>;
+  async function sendAllenQueryRequest (endpoint: string): Promise<AxiosResponse<TableItem[]> | void> {
+    return await customAxios.get<TableItem[]>(`${endpoint}?id=${queryValue}`)
+                .catch((error) => { alert (error.message); console.error(error); })
+  }
+
+  const executeAllenQuery = async (endpoint: string) => {
+    const response = await sendAllenQueryRequest(endpoint) as AxiosResponse<TableItem[]>;
     if (response) {
       handleSuccessResponse(response, visitorColumns);
     }
   }
-
 
   const executeQuery = async (e: FormEvent<HTMLButtonElement>) => {
     e.preventDefault();
     const { endpoint } = queryOptions[queryNum];
     // Allen queries handling
     if (queryNum >= 0 && queryNum <= 13) {
-      await handleAllenQueries(endpoint);
+      await executeAllenQuery(endpoint);
     } else {
-      
-    }
-  }
 
-  async function executeAllenQuery (endpoint: string): Promise<AxiosResponse<TableItem[]> | void> {
-    return await customAxios.get<TableItem[]>(`${endpoint}?id=${queryValue}`)
-                .catch((error) => { alert (error.message); console.error(error); })
+    }
   }
 
   return (
