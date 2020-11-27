@@ -68,19 +68,21 @@ type Column = {
 const App: React.FC = () => {
   const [ queryNum, setQueryNum ] = useState<number>(0);
   const [ queryValue, setQueryValue ] = useState<QueryValue>('');
+  const [ secondQueryValue, setSecondQueryValue ] = useState<QueryValue>('');
+
   const [ tableItems, setTableItems ] = useState<TableItem[]>([]);
   const [ tableColumns, setTableColumns] = useState<Column[]>([]);
   const [ isLoading, setIsLoading] = useState<boolean>(false);
 
   const requestNeedsParam = (queryNum: number) => {
-    return (queryNum >= 0 && queryNum <= 12) || (queryNum === 14) || (queryNum >= 18 && queryNum <= 21);
+    return (queryNum >= 0 && queryNum <= 12) || (queryNum >= 14 && queryNum <= 16) || (queryNum >= 18 && queryNum <= 21);
   }
 
   const getFormTitle = (queryNum: number) => {
     if (queryNum >= 0 && queryNum <= 12) {
       return 'ID B';
     }
-    if (queryNum === 14 || queryNum === 20) {
+    if ((queryNum >= 14 && queryNum <= 16) || queryNum === 20) {
       return 'ID';
     }
     if (queryNum === 18) {
@@ -91,12 +93,28 @@ const App: React.FC = () => {
     }
   }
 
+  const requestNeedsSecondParam = (queryNum: number) => {
+    return (queryNum >= 15 && queryNum <= 16);
+  }
+
+  const getSecondFormTitle = (queryNum: number) => {
+    if (queryNum >= 15 && queryNum <= 16) {
+      return 'Second ID';
+    }
+  }
+
   const getRequestParam = (queryNum: number) => {
-    if ((queryNum >= 0 && queryNum <= 12) || (queryNum === 14) || (queryNum === 20)) {
+    if ((queryNum >= 0 && queryNum <= 12) || (queryNum >= 14 && queryNum <= 16) || queryNum === 20) {
       return 'id';
     }
     if (queryNum === 18) {
       return 'time';
+    }
+  }
+
+  const getSecondRequestParam = (queryNum: number) => {
+    if (queryNum >= 15 && queryNum <= 16) {
+      return 'secondId';
     }
   }
 
@@ -116,13 +134,22 @@ const App: React.FC = () => {
     setQueryValue(value);
   }
 
+  const changeSecondQueryValue = (value: string): void => {
+    setSecondQueryValue(value);
+  }
+
   // Get request handling
   async function sendQueryGetRequest (endpoint: string): Promise<AxiosResponse<TableItem[]> | void> {
     setIsLoading(true);
+    
     let requestEndpoint = endpoint;
     if (requestNeedsParam(queryNum)) {
       requestEndpoint = `${endpoint}?${getRequestParam(queryNum)}=${queryValue}`;
     }
+    if (requestNeedsSecondParam(queryNum)) {
+      requestEndpoint = `${requestEndpoint}?${getSecondRequestParam(queryNum)}=${secondQueryValue}`;
+    }
+
     return await customAxios.get<TableItem[]>(requestEndpoint)
                 .catch((error) => { alert (error.message); console.error(error); })
                 .finally(() => setIsLoading(false))
@@ -210,6 +237,14 @@ const App: React.FC = () => {
                 <ChangableForm 
                   title={getFormTitle(queryNum)}
                   onChangeCallback={changeQueryValue}
+                />
+              )
+            }
+            {
+              requestNeedsSecondParam(queryNum) && (
+                <ChangableForm 
+                  title={getSecondFormTitle(queryNum)}
+                  onChangeCallback={changeSecondQueryValue}
                 />
               )
             }
