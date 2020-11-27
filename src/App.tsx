@@ -1,6 +1,6 @@
 import React, { FormEvent, useState } from 'react';
 import DataTable from 'react-data-table-component';
-import { Jumbotron, Container, Button, Row, Col, FormGroup, Label, Input, Spinner } from 'reactstrap';
+import { Navbar, Container, Button, Row, Col, FormGroup, Label, Input, Spinner } from 'reactstrap';
 import Select, { ValueType } from 'react-select'
 import { AxiosResponse } from 'axios'
 import {customAxios} from './utils/axios.utils'
@@ -214,10 +214,15 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="App" style={{backgroundColor: '#282c34', height: "100vh"}}>
-      <Jumbotron style={{textAlign: "center"}}>
-        <h1 className="display-4">Temporal Database Assignment</h1>
-      </Jumbotron>
+    <div className="App" style={{backgroundColor: '#282c34', minHeight: "100vh", paddingBottom: "50px"}}>
+      <Navbar style={{ marginBottom: '5px' }}>
+        <h5 className="display-5" style={{ 
+          color: 'white', textAlign: 'center', marginLeft: '70px',
+          paddingTop: '5px', paddingBottom: '5px'
+        }}>
+          Temporal Database Assignment
+        </h5>
+      </Navbar>
       <Container>
         <Row>
           <Col md="3">
