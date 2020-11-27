@@ -1,6 +1,6 @@
 import React, { FormEvent, useState } from 'react';
 import DataTable from 'react-data-table-component';
-import { Jumbotron, Container, Button, Row, Col, FormGroup, Label, Input } from 'reactstrap';
+import { Jumbotron, Container, Button, Row, Col, FormGroup, Label, Input, Spinner } from 'reactstrap';
 import Select, { ValueType } from 'react-select'
 import { AxiosResponse } from 'axios'
 import {customAxios} from './utils/axios.utils'
@@ -21,8 +21,8 @@ const queryOptions: QueryType[] = [
   { label: 'A started-by B', value: 'startedby', endpoint: '/started-by', num: 10 },
   { label: 'A finishes B', value: 'finish', endpoint: '/finish', num: 11 },
   { label: 'A met-by B', value: 'metby', endpoint: '/met-by', num: 12 },
-  // { label: 'Projection', value: 'projection', num: 13 },
-  // { label: 'Selection', value: 'checkinperday', num: 14 },
+  { label: 'Projection', value: 'projection', endpoint: '/project', num: 13 },
+  { label: 'Selection', value: 'checkinperday', endpoint: '/select', num: 14 },
   // { label: 'Union', value: 'checkinperday', num: 15 },
   // { label: 'Temporal Difference', value: 'checkinperday', num: 16 },
   // { label: 'Temporal Join', value: 'checkinperday', num: 17 },
@@ -39,19 +39,25 @@ type QueryType = {
   num: number
 };
 
-type QueryValue = number | string;
+type QueryValue = string;
 
 type TableItem = VisitorTable;
 
-type VisitorTable = {
-  id: number,
+type VisitorBody = {
+  id ?: number,
+  name: string,
   hotel: string,
   adults: number,
   children: number,
   babies: number,
   checkin_date: string,
   checkout_date: string
-};
+}
+type VisitorTable = VisitorBody;
+
+type ResponseMessage = {
+  message: string
+}
 
 type Column = {
   id: string,
@@ -104,39 +110,111 @@ const visitorColumns: Column[] = [
 
 const App: React.FC = () => {
   const [ queryNum, setQueryNum ] = useState<number>(0);
-  const [ queryValue, setQueryValue ] = useState<QueryValue>(0);
+  const [ queryValue, setQueryValue ] = useState<QueryValue>('');
   const [ tableItems, setTableItems ] = useState<TableItem[]>([]);
   const [ tableColumns, setTableColumns] = useState<Column[]>([]);
+  const [ isLoading, setIsLoading] = useState<boolean>(false);
+
+  const requestNeedsParam = (queryNum: number) => {
+    return (queryNum >= 0 && queryNum <= 12) || (queryNum === 14) || (queryNum >= 18 && queryNum <= 21);
+  }
+
+  const getFormTitle = (queryNum: number) => {
+    if (queryNum >= 0 && queryNum <= 12) {
+      return 'ID B';
+    }
+    if (queryNum === 14 || queryNum === 20) {
+      return 'ID';
+    }
+    if (queryNum === 18) {
+      return 'Time';
+    }
+    if (queryNum === 19 || queryNum === 21) {
+      return 'Request Body'
+    }
+  }
+
+  const getRequestParam = (queryNum: number) => {
+    if ((queryNum >= 0 && queryNum <= 12) || (queryNum === 14) || (queryNum === 20)) {
+      return 'id';
+    }
+    if (queryNum === 18) {
+      return 'time';
+    }
+  }
+
+  const getTableColumns = (queryNum: number) => {
+    if (queryNum >= 0 && queryNum <= 12) {
+      return visitorColumns;
+    }
+    return visitorColumns;
+  }
 
   const changeQueryValue = (value: string): void => {
     setQueryValue(value);
   }
 
-  const handleSuccessResponse = (response: AxiosResponse<TableItem[]>, columns: Column[]) => {
-    setTableItems(response.data);
-    setTableColumns(columns);
-  }
-
-  async function sendAllenQueryRequest (endpoint: string): Promise<AxiosResponse<TableItem[]> | void> {
-    return await customAxios.get<TableItem[]>(`${endpoint}?id=${queryValue}`)
+  // Get request handling
+  async function sendQueryGetRequest (endpoint: string): Promise<AxiosResponse<TableItem[]> | void> {
+    setIsLoading(true);
+    let requestEndpoint = endpoint;
+    if (requestNeedsParam(queryNum)) {
+      requestEndpoint = `${endpoint}?${getRequestParam(queryNum)}=${queryValue}`;
+    }
+    return await customAxios.get<TableItem[]>(requestEndpoint)
                 .catch((error) => { alert (error.message); console.error(error); })
+                .finally(() => setIsLoading(false))
   }
 
-  const executeAllenQuery = async (endpoint: string) => {
-    const response = await sendAllenQueryRequest(endpoint) as AxiosResponse<TableItem[]>;
+  const handleGetRequest = async (endpoint: string) => {
+    const response = await sendQueryGetRequest(endpoint) as AxiosResponse<TableItem[]>;
     if (response) {
-      handleSuccessResponse(response, visitorColumns);
+      setTableItems(response.data);
+      setTableColumns(getTableColumns(queryNum));
+    }
+  }
+
+  // Post request handling
+  async function sendQueryPostRequest (endpoint: string, body: VisitorBody): Promise<AxiosResponse<ResponseMessage> | void> {
+    setIsLoading(true);
+    return await customAxios.post<ResponseMessage>(endpoint, body)
+                .catch((error) => { alert (error.message); console.error(error); })
+                .finally(() => setIsLoading(false))
+  }
+
+  const handlePostRequest = async (endpoint: string, body: VisitorBody) => {
+    const response = await sendQueryPostRequest(endpoint, body) as AxiosResponse<ResponseMessage>;
+    if (response) {
+      alert(response.data.message);
+    }
+  }
+
+  // Delete request handling
+  async function sendQueryDeleteRequest (endpoint: string): Promise<AxiosResponse<ResponseMessage> | void> {
+    setIsLoading(true);
+    const requestEndpoint = `${endpoint}?${getRequestParam(queryNum)}=${queryValue}`
+    return await customAxios.delete<ResponseMessage>(requestEndpoint)
+                .catch((error) => { alert (error.message); console.error(error); })
+                .finally(() => setIsLoading(false))
+  }
+
+  const handleDeleteRequest = async (endpoint: string) => {
+    const response = await sendQueryDeleteRequest(endpoint) as AxiosResponse<ResponseMessage>;
+    if (response) {
+      alert(response.data.message);
     }
   }
 
   const executeQuery = async (e: FormEvent<HTMLButtonElement>) => {
     e.preventDefault();
     const { endpoint } = queryOptions[queryNum];
-    // Allen queries handling
-    if (queryNum >= 0 && queryNum <= 13) {
-      await executeAllenQuery(endpoint);
-    } else {
 
+    if (queryNum >= 0 && queryNum <= 18) {
+      handleGetRequest(endpoint);
+    } else if (queryNum >= 19 && queryNum <= 20) {
+      handlePostRequest(endpoint, JSON.parse(queryValue));
+    } else if (queryNum === 21) {
+      handleDeleteRequest(endpoint);
     }
   }
 
@@ -159,16 +237,28 @@ const App: React.FC = () => {
                 setQueryNum(num);
               }}
             />
-            <ChangableForm 
-              query={queryNum ? queryNum : 0}
-              onChangeCallback={changeQueryValue}
-            />
+            {
+              requestNeedsParam(queryNum) && (
+                <ChangableForm 
+                  title={getFormTitle(queryNum)}
+                  onChangeCallback={changeQueryValue}
+                />
+              )
+            }
             <Button
               onClick={(e: FormEvent<HTMLButtonElement>) => executeQuery(e)}
               color="danger"
+              disabled={isLoading}
               className="mt-1"
             >
               Execute Query
+              { isLoading && (
+                <Spinner
+                  style={{ width: "0.8rem", height: "0.8rem", marginLeft: "10px" }}
+                  type="grow"
+                  color="light"
+                />
+              )}
             </Button>
           </Col>
           <Col md="9">
@@ -184,25 +274,21 @@ const App: React.FC = () => {
   );
 };
 
-const ChangableForm = ({query, onChangeCallback}: any) => {
-  if (query >= 0 && query <= 12) {  // allen 13
-    return (
-      <FormGroup className="mt-2">
-        <Label className="text-white" for="inputId" style={{marginBottom: "0"}}>ID B:</Label>
-        <Input
-          onChange={(e) => onChangeCallback(e.target.value)}
-          type="text"
-          name="input_id"
-          id="inputId"
-          placeholder="Input ID B"
-        />
-      </FormGroup>
-    );
-  }
-  if (query >= 13 && query <= 21) {
-    return null;
-  }
-  return null;
+const ChangableForm = ({ title, onChangeCallback }: any) => {
+  return (
+    <FormGroup className="mt-2">
+      <Label className="text-white" for="inputId" style={{marginBottom: "0"}}>
+        { title }
+      </Label>
+      <Input
+        onChange={(e) => onChangeCallback(e.target.value)}
+        type="text"
+        name="input_id"
+        id="inputId"
+        placeholder={`Input ${title}`}
+      />
+    </FormGroup>
+  );
 }
 
 export default App;
