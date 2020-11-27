@@ -22,14 +22,14 @@ const queryOptions: QueryType[] = [
   { label: 'A finishes B', value: 'finish', endpoint: '/finish', num: 11 },
   { label: 'A met-by B', value: 'metby', endpoint: '/met-by', num: 12 },
   { label: 'Projection', value: 'projection', endpoint: '/project', num: 13 },
-  { label: 'Selection', value: 'checkinperday', endpoint: '/select', num: 14 },
-  { label: 'Union', value: 'checkinperday', endpoint: '/union', num: 15 },
-  { label: 'Temporal Difference', value: 'checkinperday', endpoint: '/tempdiff', num: 16 },
-  { label: 'Temporal Join', value: 'checkinperday', endpoint: '/tempjoin', num: 17 },
-  { label: 'Valid-TimeSlice', value: 'checkinperday', endpoint: '/valid-timeslice', num: 18 },
-  { label: 'Insert', value: 'checkinperday', endpoint: '/insert', num: 19 },
-  { label: 'Delete', value: 'checkinperday', endpoint: '/modify', num: 20 },
-  { label: 'Modify', value: 'checkinperday', endpoint: '/delete', num: 21 },
+  { label: 'Selection', value: 'selection', endpoint: '/select', num: 14 },
+  { label: 'Union', value: 'union', endpoint: '/union', num: 15 },
+  { label: 'Temporal Difference', value: 'temporaldifference', endpoint: '/tempdiff', num: 16 },
+  { label: 'Temporal Join', value: 'temporaljoin', endpoint: '/tempjoin', num: 17 },
+  { label: 'Valid-TimeSlice', value: 'validtimeslice', endpoint: '/valid-timeslice', num: 18 },
+  { label: 'Insert', value: 'insert', endpoint: '/insert', num: 19 },
+  { label: 'Delete', value: 'delete', endpoint: '/delete', num: 20 },
+  { label: 'Modify', value: 'modify', endpoint: '/modify', num: 21 },
 ];
 
 type QueryType = {
@@ -155,6 +155,8 @@ const App: React.FC = () => {
     if (response) {
       alert(response.data.message);
     }
+    setTableItems([]);
+    setTableColumns([]);
   }
 
   // Delete request handling
@@ -171,6 +173,8 @@ const App: React.FC = () => {
     if (response) {
       alert(response.data.message);
     }
+    setTableItems([]);
+    setTableColumns([]);
   }
 
   const executeQuery = async (e: FormEvent<HTMLButtonElement>) => {
@@ -179,9 +183,9 @@ const App: React.FC = () => {
 
     if (queryNum >= 0 && queryNum <= 18) {
       handleGetRequest(endpoint);
-    } else if (queryNum >= 19 && queryNum <= 20) {
+    } else if (queryNum === 19 || queryNum === 21) {
       handlePostRequest(endpoint, JSON.parse(queryValue));
-    } else if (queryNum === 21) {
+    } else if (queryNum === 20) {
       handleDeleteRequest(endpoint);
     }
   }
