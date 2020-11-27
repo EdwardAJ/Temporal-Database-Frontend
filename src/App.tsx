@@ -147,7 +147,7 @@ const App: React.FC = () => {
       requestEndpoint = `${endpoint}?${getRequestParam(queryNum)}=${queryValue}`;
     }
     if (requestNeedsSecondParam(queryNum)) {
-      requestEndpoint = `${requestEndpoint}?${getSecondRequestParam(queryNum)}=${secondQueryValue}`;
+      requestEndpoint = `${requestEndpoint}&${getSecondRequestParam(queryNum)}=${secondQueryValue}`;
     }
 
     return await customAxios.get<TableItem[]>(requestEndpoint)

@@ -1,7 +1,9 @@
 import axios, { AxiosInstance } from 'axios'
 
 const customAxios: AxiosInstance = axios.create({
-    baseURL: 'https://fatanugraha.xyz/api'
+    baseURL: 'http://localhost:8000/api'
 })
 
 export { customAxios }
+
+// https://fatanugraha.xyz/api
