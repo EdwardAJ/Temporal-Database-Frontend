@@ -23,13 +23,13 @@ const queryOptions: QueryType[] = [
   { label: 'A met-by B', value: 'metby', endpoint: '/met-by', num: 12 },
   { label: 'Projection', value: 'projection', endpoint: '/project', num: 13 },
   { label: 'Selection', value: 'checkinperday', endpoint: '/select', num: 14 },
-  // { label: 'Union', value: 'checkinperday', num: 15 },
-  // { label: 'Temporal Difference', value: 'checkinperday', num: 16 },
-  // { label: 'Temporal Join', value: 'checkinperday', num: 17 },
-  // { label: 'Valid-TimeSlice', value: 'checkinperday', num: 18 },
-  // { label: 'Insert', value: 'checkinperday', num: 19 },
-  // { label: 'Delete', value: 'checkinperday', num: 20 },
-  // { label: 'Modify', value: 'checkinperday', num: 21 },
+  { label: 'Union', value: 'checkinperday', endpoint: '/union', num: 15 },
+  { label: 'Temporal Difference', value: 'checkinperday', endpoint: '/tempdiff', num: 16 },
+  { label: 'Temporal Join', value: 'checkinperday', endpoint: '/tempjoin', num: 17 },
+  { label: 'Valid-TimeSlice', value: 'checkinperday', endpoint: '/valid-timeslice', num: 18 },
+  { label: 'Insert', value: 'checkinperday', endpoint: '/insert', num: 19 },
+  { label: 'Delete', value: 'checkinperday', endpoint: '/modify', num: 20 },
+  { label: 'Modify', value: 'checkinperday', endpoint: '/delete', num: 21 },
 ];
 
 type QueryType = {
@@ -64,49 +64,6 @@ type Column = {
   name: string,
   selector: string
 }
-
-const visitorColumns: Column[] = [
-  {
-    id: 'id',
-    name: 'ID A',
-    selector: 'id'
-  },
-  {
-    id: 'name',
-    name: 'Name',
-    selector: 'name'
-  },
-  {
-    id: 'hotel',
-    name: 'Hotel',
-    selector: 'hotel'
-  },
-  {
-    id: 'adults',
-    name: 'Adults',
-    selector: 'adults'
-  },
-  {
-    id: 'children',
-    name: 'Children',
-    selector: 'children'
-  },
-  {
-    id: 'babies',
-    name: 'Babies',
-    selector: 'babies'
-  },
-  {
-    id: 'checkin_date',
-    name: 'Check In Date',
-    selector: 'checkin_date'
-  },
-  {
-    id: 'checkout_date',
-    name: 'Check Out Date',
-    selector: 'checkout_date'
-  }
-];
 
 const App: React.FC = () => {
   const [ queryNum, setQueryNum ] = useState<number>(0);
@@ -143,11 +100,16 @@ const App: React.FC = () => {
     }
   }
 
-  const getTableColumns = (queryNum: number) => {
-    if (queryNum >= 0 && queryNum <= 12) {
-      return visitorColumns;
-    }
-    return visitorColumns;
+  const getTableColumns = (firstData: TableItem) => {
+    let columns: Column[] = [];
+    Object.keys(firstData).forEach((key) => {
+      columns.push({
+        id: key,
+        name: key,
+        selector: key
+      })
+    })
+    return columns;
   }
 
   const changeQueryValue = (value: string): void => {
@@ -168,10 +130,16 @@ const App: React.FC = () => {
 
   const handleGetRequest = async (endpoint: string) => {
     const response = await sendQueryGetRequest(endpoint) as AxiosResponse<TableItem[]>;
-    if (response) {
-      setTableItems(response.data);
-      setTableColumns(getTableColumns(queryNum));
+    if (!response) {
+      setTableItems([]);
+      return;
     }
+    setTableItems(response.data);
+    if (response.data.length === 0) {
+      setTableColumns([]);
+      return;
+    }
+    setTableColumns(getTableColumns(response.data[0]));
   }
 
   // Post request handling
