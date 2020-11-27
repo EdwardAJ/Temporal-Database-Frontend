@@ -131,14 +131,12 @@ const App: React.FC = () => {
   const handleGetRequest = async (endpoint: string) => {
     const response = await sendQueryGetRequest(endpoint) as AxiosResponse<TableItem[]>;
     if (!response) {
-      setTableItems([]);
+      return;
+    }
+    if (response.data.length === 0) {
       return;
     }
     setTableItems(response.data);
-    if (response.data.length === 0) {
-      setTableColumns([]);
-      return;
-    }
     setTableColumns(getTableColumns(response.data[0]));
   }
 
@@ -155,8 +153,6 @@ const App: React.FC = () => {
     if (response) {
       alert(response.data.message);
     }
-    setTableItems([]);
-    setTableColumns([]);
   }
 
   // Delete request handling
@@ -173,12 +169,12 @@ const App: React.FC = () => {
     if (response) {
       alert(response.data.message);
     }
-    setTableItems([]);
-    setTableColumns([]);
   }
 
   const executeQuery = async (e: FormEvent<HTMLButtonElement>) => {
     e.preventDefault();
+    setTableColumns([]);
+    setTableItems([]);
     const { endpoint } = queryOptions[queryNum];
 
     if (queryNum >= 0 && queryNum <= 18) {
